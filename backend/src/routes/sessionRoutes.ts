@@ -6,10 +6,10 @@ import { createSession, getSession, updateSession } from '../controllers/session
 const router = Router();
 
 // Define routes and use the correct async handler types
-router.post('/', createSession);
+router.post('/create', createSession);
 
-router.get('/', getSession)
+router.get('/get', getSession)
 
-router.put('/', updateSession)
+router.put('/update', updateSession)
 
 export default router;

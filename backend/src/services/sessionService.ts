@@ -96,9 +96,6 @@ export const updateSessionService = async (sessionId: string, data: any) => {
             }
         }
 
-        // Log the updated session
-        console.log('Updated session:', session);
-
         // Save the updated session data back to Redis
         await redisService.setKey(sessionId, JSON.stringify(session), SESSION_EXPIRY);
 
