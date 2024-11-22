@@ -50,16 +50,15 @@ export const getSessionService = async (sessionId: string) => {
 
 // Update session data
 export const updateSessionService = async (sessionId: string, data: any) => {
-
     const { subscriberId, participantType, domain, transactionId, transactionMode, state, details } = data;
+
 
     try {
         // Retrieve the session data from Redis
         const sessionData = await redisService.getKey(sessionId);
-        // const sessionData = await redisClient.get(sessionId);
 
         if (!sessionData) {
-            throw new Error('Session not found')
+            throw new Error('Session not found');
         }
 
         const session: SessionData = JSON.parse(sessionData);
@@ -69,21 +68,41 @@ export const updateSessionService = async (sessionId: string, data: any) => {
         if (participantType) session.participantType = participantType;
         if (domain) session.domain = domain;
 
-        // If transaction data is provided, update the transaction details
-        if (transactionId && transactionMode && state) {
-            session.transactions[transactionId] = {
-                transactionMode,
-                state,
-                data: details || {},
-                createdAt: new Date().toISOString(),
-            };
+        // Ensure transactions object exists
+        if (!session.transactions) {
+            session.transactions = {};
         }
+
+        // If transaction data is provided, update or add the transaction
+        if (transactionId) {
+            if (!session.transactions[transactionId]) {
+                // Add new transaction
+                console.log("new transaction");
+
+                session.transactions[transactionId] = {
+                    transactionMode,
+                    state,
+                    data: details || {},
+                    createdAt: new Date().toISOString(),
+                };
+            } else {
+                // Update existing transaction
+                session.transactions[transactionId] = {
+                    ...session.transactions[transactionId], // Preserve existing details
+                    transactionMode,
+                    state,
+                    data: details || {},
+                };
+            }
+        }
+
+        // Log the updated session
+        console.log('Updated session:', session);
 
         // Save the updated session data back to Redis
         await redisService.setKey(sessionId, JSON.stringify(session), SESSION_EXPIRY);
 
         return 'Session updated successfully';
-
 
     } catch (error: any) {
         throw new Error(`${error.message}`);
